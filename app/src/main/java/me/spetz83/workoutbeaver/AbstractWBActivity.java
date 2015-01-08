@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 
+import com.squareup.otto.Bus;
+
 /**
  * Created by tom on 1/7/2015.
  */
