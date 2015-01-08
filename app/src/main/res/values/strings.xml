@@ -4,5 +4,9 @@
     <string name="app_name">Workout Beaver</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
+    <string name="username_hint">Username</string>
+    <string name="password_hint">Password</string>
+    <string name="btn_login">Login</string>
+    <string name="btn_register">Register</string>
 
 </resources>
