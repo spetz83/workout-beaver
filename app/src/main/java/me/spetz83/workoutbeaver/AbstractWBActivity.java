@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.widget.Toolbar;
 
+import com.parse.Parse;
 import com.squareup.otto.Bus;
 
 /**
@@ -21,5 +22,8 @@ public class AbstractWBActivity extends ActionBarActivity
         {
             setSupportActionBar(toolbar);
         }
+
+        Parse.initialize(this, getString(R.string.parse_app_id), getString(R.string.parse_client_key));
+
     }
 }

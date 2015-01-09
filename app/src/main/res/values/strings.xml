@@ -9,5 +9,7 @@
     <string name="btn_login">Login</string>
     <string name="btn_register">Register</string>
     <string name="title_activity_home">HomeActivity</string>
+    <string name="parse_app_id">JdJ1QQy8y9ILXU9d9Nm2hjdocC2yJ0rlmoaQRKnH</string>
+    <string name="parse_client_key">vSXBT4cVxwp5BWTmrGHqebkYCPfol6TxEDkUg3bQ</string>
 
 </resources>
