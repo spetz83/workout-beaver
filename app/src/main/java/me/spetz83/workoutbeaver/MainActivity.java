@@ -63,11 +63,7 @@ public class MainActivity extends AbstractWBActivity implements
     public void login(View view)
     {
         Log.d(MAIN_TAG, "Login");
-        Intent intent = new Intent(this, HomeActivity.class);
-
-        String message = username.getText().toString() + ' ' + password.getText().toString();
-        intent.putExtra(AUTH_MESSAGE, message);
-        startActivity(intent);
+        navigateToHomeScreen();
     }
 
     @OnClick(R.id.btn_gplus)
@@ -115,7 +111,7 @@ public class MainActivity extends AbstractWBActivity implements
     public void onConnected(Bundle bundle)
     {
         mGplusClicked = false;
-
+        navigateToHomeScreen();
     }
 
     @Override
@@ -155,24 +151,6 @@ public class MainActivity extends AbstractWBActivity implements
         }
     }
 
-    private void resolveSignInError()
-    {
-        if(!mIntentInProgress && mConnectionResult.hasResolution())
-        {
-            try
-            {
-                mIntentInProgress = true;
-                startIntentSenderForResult(mConnectionResult.getResolution().getIntentSender(),
-                        RC_SIGN_IN, null, 0, 0, 0);
-            }
-            catch (IntentSender.SendIntentException e)
-            {
-                mIntentInProgress = false;
-                mGoogleApiClient.connect();
-            }
-        }
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
@@ -195,5 +173,32 @@ public class MainActivity extends AbstractWBActivity implements
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void resolveSignInError()
+    {
+        if(!mIntentInProgress && mConnectionResult.hasResolution())
+        {
+            try
+            {
+                mIntentInProgress = true;
+                startIntentSenderForResult(mConnectionResult.getResolution().getIntentSender(),
+                        RC_SIGN_IN, null, 0, 0, 0);
+            }
+            catch (IntentSender.SendIntentException e)
+            {
+                mIntentInProgress = false;
+                mGoogleApiClient.connect();
+            }
+        }
+    }
+
+    private void navigateToHomeScreen()
+    {
+        Intent intent = new Intent(this, HomeActivity.class);
+
+        String message = username.getText().toString() + ' ' + password.getText().toString();
+        intent.putExtra(AUTH_MESSAGE, message);
+        startActivity(intent);
     }
 }
