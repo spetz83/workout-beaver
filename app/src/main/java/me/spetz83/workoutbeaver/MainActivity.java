@@ -3,16 +3,24 @@ package me.spetz83.workoutbeaver;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
+import com.google.android.gms.auth.GoogleAuthUtil;
+import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.plus.Plus;
 import com.squareup.otto.Bus;
+
+import java.io.IOException;
 
 import javax.inject.Inject;
 
@@ -66,6 +74,22 @@ public class MainActivity extends AbstractWBActivity implements
         navigateToHomeScreen();
     }
 
+    @OnClick(R.id.btn_debug)
+    public void debug(View view)
+    {
+        Log.d(MAIN_TAG, "Debug");
+        if(mGoogleApiClient.isConnected()) {
+            Plus.AccountApi.clearDefaultAccount(mGoogleApiClient);
+            Plus.AccountApi.revokeAccessAndDisconnect(mGoogleApiClient)
+                    .setResultCallback(new ResultCallback<Status>() {
+                        @Override
+                        public void onResult(Status status) {
+                            Log.d(MAIN_TAG, "Disconnected User");
+                        }
+                    });
+        }
+    }
+
     @OnClick(R.id.btn_gplus)
     public void gPlusSignIn(View view)
     {
@@ -111,6 +135,30 @@ public class MainActivity extends AbstractWBActivity implements
     public void onConnected(Bundle bundle)
     {
         mGplusClicked = false;
+
+        String accessToken = null;
+        try
+        {
+            accessToken = GoogleAuthUtil.getToken(this,
+                    Plus.AccountApi.getAccountName(mGoogleApiClient),
+                    "oauth2:" + Plus.SCOPE_PLUS_PROFILE);
+            Log.d(MAIN_TAG, accessToken);
+        }
+        catch(IOException transietEx)
+        {
+            return;
+        }
+        catch(UserRecoverableAuthException e)
+        {
+            accessToken = null;
+        }
+        catch(Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+
+
+
         navigateToHomeScreen();
     }
 
