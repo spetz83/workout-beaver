@@ -136,26 +136,7 @@ public class MainActivity extends AbstractWBActivity implements
     {
         mGplusClicked = false;
 
-        String accessToken = null;
-        try
-        {
-            accessToken = GoogleAuthUtil.getToken(this,
-                    Plus.AccountApi.getAccountName(mGoogleApiClient),
-                    "oauth2:" + Plus.SCOPE_PLUS_PROFILE);
-            Log.d(MAIN_TAG, accessToken);
-        }
-        catch(IOException transietEx)
-        {
-            return;
-        }
-        catch(UserRecoverableAuthException e)
-        {
-            accessToken = null;
-        }
-        catch(Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+
 
 
 
