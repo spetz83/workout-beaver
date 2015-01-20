@@ -2,6 +2,7 @@ package me.spetz83.workoutbeaver;
 
 import android.content.Intent;
 import android.content.IntentSender;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -10,17 +11,23 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
+import com.google.android.gms.auth.GoogleAuthException;
 import com.google.android.gms.auth.GoogleAuthUtil;
 import com.google.android.gms.auth.UserRecoverableAuthException;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesUtil;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.plus.Plus;
+import com.parse.FunctionCallback;
+import com.parse.ParseCloud;
+import com.parse.ParseException;
 import com.squareup.otto.Bus;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import javax.inject.Inject;
 
@@ -54,8 +61,9 @@ public class MainActivity extends AbstractWBActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-        setContentView(R.layout.activity_main);
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
         DaggerInjector.inject(this);
         ButterKnife.inject(this);
 
@@ -65,6 +73,7 @@ public class MainActivity extends AbstractWBActivity implements
                 .addApi(Plus.API)
                 .addScope(Plus.SCOPE_PLUS_LOGIN)
                 .build();
+        mGoogleApiClient.connect();
     }
 
     @OnClick(R.id.btn_login)
@@ -136,11 +145,49 @@ public class MainActivity extends AbstractWBActivity implements
     {
         mGplusClicked = false;
 
+        AsyncTask<Void, Void, String> task = new AsyncTask<Void, Void, String>() {
+            @Override
+            protected String doInBackground(Void... params) {
+                String token = null;
 
+                try
+                {
+                    token = GoogleAuthUtil.getToken(MainActivity.this, Plus.AccountApi.getAccountName(mGoogleApiClient), "oauth2:" + Plus.SCOPE_PLUS_PROFILE);
+                }
+                catch(IOException transientEx)
+                {
+                    Log.e(MAIN_TAG, transientEx.toString());
+                }
+                catch(UserRecoverableAuthException e)
+                {
+                    Log.e(MAIN_TAG, e.toString());
+                    Intent recoverIntent = e.getIntent();
+                    startActivityForResult(recoverIntent, RC_SIGN_IN);
+                }
+                catch(GoogleAuthException authEx)
+                {
+                    Log.e(MAIN_TAG, authEx.toString());
+                }
+                return token;
+            }
 
-
-
-        navigateToHomeScreen();
+            @Override
+            protected void onPostExecute(String token)
+            {
+                Log.i(MAIN_TAG, "Access token retrieved: " + token);
+                HashMap<String, String> params = new HashMap<>();
+                params.put("email", Plus.AccountApi.getAccountName(mGoogleApiClient));
+                params.put("code", token);
+                ParseCloud.callFunctionInBackground("accessGoogleUser", params, new FunctionCallback<String>() {
+                    @Override
+                    public void done(String result, ParseException e) {
+                        Log.i(MAIN_TAG, result);
+                    }
+                });
+            }
+        };
+        task.execute();
+        //navigateToHomeScreen();
     }
 
     @Override
@@ -152,6 +199,11 @@ public class MainActivity extends AbstractWBActivity implements
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult)
     {
+        if(!connectionResult.hasResolution())
+        {
+            GooglePlayServicesUtil.getErrorDialog(connectionResult.getErrorCode(), this, 0).show();
+            return;
+        }
         if(!mIntentInProgress)
         {
             mConnectionResult = connectionResult;
@@ -206,7 +258,7 @@ public class MainActivity extends AbstractWBActivity implements
 
     private void resolveSignInError()
     {
-        if(!mIntentInProgress && mConnectionResult.hasResolution())
+        if(mConnectionResult.hasResolution())
         {
             try
             {
